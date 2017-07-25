@@ -1,3 +1,11 @@
+var defaultCorsHeaders = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'access-control-allow-headers': 'content-type, accept',
+  'access-control-max-age': 10 // Seconds.
+};
+
+var messages = [{username: '', message: '   '}];
 /*************************************************************
 
 You should implement your request handler function in this file.
@@ -27,23 +35,78 @@ var requestHandler = function(request, response) {
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
-  console.log('Serving request type ' + request.method + ' for url ' + request.url);
-
-  // The outgoing status.
-  var statusCode = 200;
-
-  // See the note below about CORS headers.
+  var statusCode;
   var headers = defaultCorsHeaders;
+  headers['Content-Type'] = 'application/json';
+  
+  console.log('Serving request type ' + request.method + ' for url ' + request.url);
+  // console.log(request, 'request');
+  // console.log(response, 'response');
+  // var requestMethods = {
+
+  //   GET: function(response, request) {
+  //     response.writeHead(200, headers);
+  //     response.end(JSON.stringify(messages));
+  //   },
+
+  //   POST: function(response, request){
+  //     response.writeHead(201, headers);
+  //     //code that posts message to body  
+  //     response.end();
+  //   },
+
+  //   ERROR: function(response, request){
+  //     response.writeHead(404, headers);
+  //   }, 
+    
+  //   OPTIONS: function(response, request) {
+      
+  //   },
+
+  //   PUT: function(response, request) {
+  //     response.writeHead(201, headers);
+  //   }
+  // };
+
+  // requestMethods[request.method](response, request);
+  // The outgoing status.
+  var resp;
+
+  if (request.method === 'GET') {
+    statusCode = 200;
+    resp = JSON.stringify({results: messages});   
+  } else if (request.method === 'DELETE') {
+    statusCode = 201;
+    
+  } else if (request.method === 'OPTIONS'){
+    statusCode = 200;
+  } else if (request.method === 'POST') {
+    statusCode = 201;
+    request.on('data', (data) => {
+      var body = data;
+      messages.push(JSON.parse(body));
+    });
+    messages.push(request.message);
+  } else if (request.method === 'PUT') {
+    statusCode = 200;
+    // messages.push(request)
+  } else if (request.method === 'ERROR') {
+    statusCode = 404;
+  }else if (request.url !== '/classes/messages') {
+    statusCode = 404;
+  }else{
+    statusCode = 404;
+  }
+  // See the note below about CORS headers.
 
   // Tell the client we are sending them plain text.
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = 'text/plain';
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
+  // response.writeHead(statusCode, headers);
 
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
@@ -52,7 +115,8 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end('Hello, World!');
+  response.writeHead(statusCode, headers);
+  response.end(resp);
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
@@ -64,10 +128,6 @@ var requestHandler = function(request, response) {
 //
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
-var defaultCorsHeaders = {
-  'access-control-allow-origin': '*',
-  'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'access-control-allow-headers': 'content-type, accept',
-  'access-control-max-age': 10 // Seconds.
-};
+
+module.exports.requestHandler = requestHandler;
 
