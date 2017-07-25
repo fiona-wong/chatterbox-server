@@ -5,7 +5,7 @@ var defaultCorsHeaders = {
   'access-control-max-age': 10 // Seconds.
 };
 
-var messages = [{username: '', message: '   '}];
+var messages = [];
 /*************************************************************
 
 You should implement your request handler function in this file.
@@ -74,7 +74,12 @@ var requestHandler = function(request, response) {
 
   if (request.method === 'GET') {
     statusCode = 200;
-    resp = JSON.stringify({results: messages});   
+    resp = JSON.stringify({results: messages});
+    if (request.url !== '/classes/messages') {
+      statusCode = 404;
+      response.writeHead(statusCode, headers);
+      response.end();
+    }  
   } else if (request.method === 'DELETE') {
     statusCode = 201;
     
@@ -85,18 +90,12 @@ var requestHandler = function(request, response) {
     request.on('data', (data) => {
       var body = data;
       messages.push(JSON.parse(body));
-    });
-    messages.push(request.message);
+      // resp = messages.concat()
+    }); 
   } else if (request.method === 'PUT') {
     statusCode = 200;
     // messages.push(request)
-  } else if (request.method === 'ERROR') {
-    statusCode = 404;
-  }else if (request.url !== '/classes/messages') {
-    statusCode = 404;
-  }else{
-    statusCode = 404;
-  }
+  } 
   // See the note below about CORS headers.
 
   // Tell the client we are sending them plain text.
