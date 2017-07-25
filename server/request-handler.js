@@ -43,7 +43,7 @@ var requestHandler = function(request, response) {
   // console.log(request, 'request');
   // console.log(response, 'response');
   // var requestMethods = {
-
+  
   //   GET: function(response, request) {
   //     response.writeHead(200, headers);
   //     response.end(JSON.stringify(messages));
