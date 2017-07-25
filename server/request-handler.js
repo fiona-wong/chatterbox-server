@@ -5,7 +5,8 @@ var defaultCorsHeaders = {
   'access-control-max-age': 10 // Seconds.
 };
 
-var messages = [];
+var messages = {results: []};
+var objID = 1;
 /*************************************************************
 
 You should implement your request handler function in this file.
@@ -70,32 +71,36 @@ var requestHandler = function(request, response) {
 
   // requestMethods[request.method](response, request);
   // The outgoing status.
-  var resp;
 
+  // console.log(response, 'url')
   if (request.method === 'GET') {
     statusCode = 200;
-    resp = JSON.stringify({results: messages});
+    response.writeHead(statusCode, headers);
+    response.end(JSON.stringify(messages));
     if (request.url !== '/classes/messages') {
       statusCode = 404;
       response.writeHead(statusCode, headers);
       response.end();
     }  
-  } else if (request.method === 'DELETE') {
-    statusCode = 201;
-    
   } else if (request.method === 'OPTIONS'){
     statusCode = 200;
+    response.writeHead(statusCode, headers);
+    response.end();
   } else if (request.method === 'POST') {
     statusCode = 201;
+    var body = '';
     request.on('data', (data) => {
-      var body = data;
-      messages.push(JSON.parse(body));
+      body += data;
       // resp = messages.concat()
-    }); 
-  } else if (request.method === 'PUT') {
-    statusCode = 200;
-    // messages.push(request)
-  } 
+    });
+    request.on('end', () => {
+      var parsed = JSON.parse(body);
+      parsed.objectId = ++objID;
+      messages.results.push(parsed);
+      response.writeHead(statusCode, headers);
+      response.end(JSON.stringify({objectID: parsed.objectId}));
+    });
+  }
   // See the note below about CORS headers.
 
   // Tell the client we are sending them plain text.
@@ -114,8 +119,6 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.writeHead(statusCode, headers);
-  response.end(resp);
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
