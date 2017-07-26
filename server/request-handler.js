@@ -1,12 +1,13 @@
+var fs = require('fs');
+
+var messages = {results: []};
+var objID = 1;
 var defaultCorsHeaders = {
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'access-control-allow-headers': 'content-type, accept',
   'access-control-max-age': 10 // Seconds.
 };
-
-var messages = {results: []};
-var objID = 1;
 /*************************************************************
 
 You should implement your request handler function in this file.
@@ -43,64 +44,47 @@ var requestHandler = function(request, response) {
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
   // console.log(request, 'request');
   // console.log(response, 'response');
-  // var requestMethods = {
+  var requestMethods = {
   
-  //   GET: function(response, request) {
-  //     response.writeHead(200, headers);
-  //     response.end(JSON.stringify(messages));
-  //   },
+    GET: function(response, request) {
 
-  //   POST: function(response, request){
-  //     response.writeHead(201, headers);
-  //     //code that posts message to body  
-  //     response.end();
-  //   },
+      statusCode = 200;
 
-  //   ERROR: function(response, request){
-  //     response.writeHead(404, headers);
-  //   }, 
-    
-  //   OPTIONS: function(response, request) {
-      
-  //   },
+      response.writeHead(statusCode, headers);
+      // fs.readFile('./client/index.html', )
+      response.end(JSON.stringify(messages));
+    },
 
-  //   PUT: function(response, request) {
-  //     response.writeHead(201, headers);
-  //   }
-  // };
+    POST: function(response, request){
+      statusCode = 201;
+      var body = '';
+      request.on('data', (data) => {
+        body += data;
+        // resp = messages.concat()
+      });
+      request.on('end', () => {
+        var parsed = JSON.parse(body);
+        parsed.objectId = ++objID;
+        messages.results.push(parsed);
+        response.writeHead(statusCode, headers);
+        response.end(JSON.stringify({objectID: parsed.objectId}));
+      });
+    },
 
-  // requestMethods[request.method](response, request);
-  // The outgoing status.
-
-  // console.log(response, 'url')
-  if (request.method === 'GET') {
-    statusCode = 200;
-    response.writeHead(statusCode, headers);
-    response.end(JSON.stringify(messages));
-    if (request.url !== '/classes/messages') {
+    ERROR: function(response, request){
       statusCode = 404;
       response.writeHead(statusCode, headers);
       response.end();
-    }  
-  } else if (request.method === 'OPTIONS'){
-    statusCode = 200;
-    response.writeHead(statusCode, headers);
-    response.end();
-  } else if (request.method === 'POST') {
-    statusCode = 201;
-    var body = '';
-    request.on('data', (data) => {
-      body += data;
-      // resp = messages.concat()
-    });
-    request.on('end', () => {
-      var parsed = JSON.parse(body);
-      parsed.objectId = ++objID;
-      messages.results.push(parsed);
+    }, 
+    
+    OPTIONS: function(response, request) {
+      statusCode = 200;
       response.writeHead(statusCode, headers);
-      response.end(JSON.stringify({objectID: parsed.objectId}));
-    });
-  }
+      response.end();
+    },
+  };
+
+  requestMethods[request.method](response, request);
   // See the note below about CORS headers.
 
   // Tell the client we are sending them plain text.
